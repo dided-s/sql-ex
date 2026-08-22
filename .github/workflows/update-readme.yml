@@ -1,4 +1,4 @@
-name: Update README
+name: Update nested README
 
 on:
   push:
@@ -16,17 +16,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dineshsonachalam/markdown-autodocs@v1.0.4
+      - name: Install markdown-autodocs
+        run: npm install --global markdown-autodocs
+
+      - name: Update README
+        run: |
+          markdown-autodocs \
+            -c code-block \
+            -o "sql-ex/select-training/computer-firm/README.md"
 
       - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          if git diff --quiet README.md; then
-            echo "README unchanged"
+          if git diff --quiet; then
+            echo "No changes"
           else
-            git add README.md
-            git commit -m "docs: update README"
+            git add "sql/sql-ex/select-training/computer-firm/README.md"
+            git commit -m "docs: update SQL README"
             git push
           fi
