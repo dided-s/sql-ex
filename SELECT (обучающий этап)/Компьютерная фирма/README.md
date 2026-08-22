@@ -16,5 +16,30 @@
 
 ![computer database](image.png)
 
+# Задача 1
+
+Найдите номер модели, скорость и размер жесткого диска для всех ПК стоимостью менее 500 дол. Вывести: model, speed и hd
+
+<!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./sql/sql-ex/SELECT (обучающий этап)/Компьютерная фирма/tasks/0001.sql) -->
+<!-- MARKDOWN-AUTO-DOCS:END -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
