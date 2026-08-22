@@ -1,11 +1,9 @@
-name: Update README SQL snippets
+name: Update README
 
 on:
   push:
     branches:
       - master
-    paths-ignore:
-      - ".github/workflows/update-readme.yml"
   workflow_dispatch:
 
 permissions:
@@ -16,11 +14,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Update README
-        uses: dineshsonachalam/markdown-autodocs@v1.0.4
+      - uses: dineshsonachalam/markdown-autodocs@v1.0.4
 
       - name: Commit changes
         run: |
@@ -28,9 +24,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           if git diff --quiet README.md; then
-            echo "README is already up to date"
+            echo "README unchanged"
           else
             git add README.md
-            git commit -m "docs: update SQL snippets"
+            git commit -m "docs: update README"
             git push
           fi
