@@ -3,10 +3,8 @@ name: Update README SQL snippets
 on:
   push:
     branches:
-      - main
-    paths:
-      - "sql/**"
-      - "README.md"
+      - master
+    paths-ignore:
       - ".github/workflows/update-readme.yml"
   workflow_dispatch:
 
