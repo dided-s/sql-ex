@@ -23,7 +23,8 @@ jobs:
         run: |
           markdown-autodocs \
             -c code-block \
-            -o "sql-ex/select-training/computer-firm/README.md"
+            -o "./README.md" \
+            -o "./select-training/computer-firm/README.md"
 
       - name: Commit changes
         run: |
