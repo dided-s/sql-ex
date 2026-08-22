@@ -34,7 +34,8 @@ jobs:
           if git diff --quiet; then
             echo "No changes"
           else
-            git add "sql/sql-ex/select-training/computer-firm/README.md"
+            git add "./select-training/computer-firm/README.md"
+            git add "./README.md"
             git commit -m "docs: update SQL README"
             git push
           fi
