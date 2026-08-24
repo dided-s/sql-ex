@@ -16,6 +16,10 @@
 
 ![computer database](image.png)
 
+[create_database.sql](./../../databases/create_database.sql) - скрипт для создания ДБ
+
+[computer_mysql_script.sql](./../../databases/computer_mysql_script.sql) - скрипт для создания "Компьютерная фирма"
+
 ### Задание: 1 (Serge I: 2002-09-30) [1]
 Найдите номер модели, скорость и размер жесткого диска для всех ПК стоимостью менее 500 дол. Вывести: model, speed и hd
 
