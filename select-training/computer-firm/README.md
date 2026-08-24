@@ -23,6 +23,12 @@
 Вывести: model, speed и hd
 
 <!-- MARKDOWN-AUTO-DOCS:START (CODE:src=./tasks/0001.sql) -->
+<!-- The below code snippet is automatically added from ./tasks/0001.sql -->
+```sql
+SELECT model, speed, hd
+  FROM pc
+ WHERE price < 500;
+```
 <!-- MARKDOWN-AUTO-DOCS:END -->
 
 
