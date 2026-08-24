@@ -2,8 +2,8 @@ from pathlib import Path
 import subprocess
 import sys
 
-NOTEBOOK = Path("tasks.ipynb")
-OUTPUT_MD = Path("README.md")
+NOTEBOOK = Path("./select-training/computer-firm/tasks.ipynb")
+OUTPUT_MD = Path("./select-training/computer-firm/README.md")
 
 def main():
     if not NOTEBOOK.exists():
