@@ -1,10 +1,12 @@
-name: Update nested README
+name: Update README
 
 on:
   push:
     branches:
       - master
   workflow_dispatch:
+  schedule:
+    - cron: "0 */6 * * *"
 
 permissions:
   contents: write
@@ -12,30 +14,20 @@ permissions:
 jobs:
   update-readme:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install markdown-autodocs
-        run: npm install --global markdown-autodocs
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-      - name: Update README
-        run: |
-          markdown-autodocs \
-            -c code-block \
-            -o "./README.md" \
-            -o "./select-training/computer-firm/README.md"
+      - name: Generate README
+        run: python generate_readme.py
 
       - name: Commit changes
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          if git diff --quiet; then
-            echo "No changes"
-          else
-            git add "./select-training/computer-firm/README.md"
-            git add "./README.md"
-            git commit -m "docs: update SQL README"
-            git push
-          fi
+          git add "./select-training/computer-firm/README.md"
+          git add "./README.md"
+          git diff --cached --quiet || git commit -m "docs: update README"
+          git push
