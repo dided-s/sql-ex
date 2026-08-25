@@ -23,7 +23,7 @@
 
 [create_database.sql](./../../databases/create_database.sql) - скрипт для создания ДБ
 
-[computer_mysql_script.sql](./../../databases/ships_mysql_script.sql) - скрипт для создания "Компьютерная фирма"
+[ships_mysql_script.sql](./../../databases/ships_mysql_script.sql) - скрипт для создания "Корабли"
 
 ### Задание: 14 (Serge I: 2002-11-05) [1]
 Найдите класс, имя и страну для кораблей из таблицы Ships, имеющих не менее 10 орудий.
@@ -226,6 +226,541 @@ SELECT ship
 </table>
 
 
+
+### Задание: 34 (Serge I: 2002-11-04) [2]
+По Вашингтонскому международному договору от начала 1922 г. запрещалось строить линейные корабли водоизмещением более 35 тыс.тонн. Укажите корабли, нарушившие этот договор (учитывать только корабли c известным годом спуска на воду). Вывести названия кораблей.
+
+
+
+```sql
+%%sql
+SELECT name
+  FROM ships
+  JOIN classes
+    ON ships.class = classes.class
+ WHERE type = 'bb'
+   AND launched >= 1922
+   AND displacement > 35000;
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    9 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>name</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Iowa</td>
+        </tr>
+        <tr>
+            <td>Missouri</td>
+        </tr>
+        <tr>
+            <td>New Jersey</td>
+        </tr>
+        <tr>
+            <td>Wisconsin</td>
+        </tr>
+        <tr>
+            <td>North Carolina</td>
+        </tr>
+        <tr>
+            <td>South Dakota</td>
+        </tr>
+        <tr>
+            <td>Washington</td>
+        </tr>
+        <tr>
+            <td>Musashi</td>
+        </tr>
+        <tr>
+            <td>Yamato</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 36 (Serge I: 2003-02-17) [2]
+Перечислите названия головных кораблей, имеющихся в базе данных (учесть корабли в Outcomes).
+
+
+```sql
+%%sql
+SELECT classes.class
+  FROM classes
+  JOIN ships
+    ON classes.class = ships.name
+
+ UNION
+
+SELECT classes.class
+  FROM classes
+  JOIN outcomes
+    ON classes.class = outcomes.ship;
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    8 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>class</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Iowa</td>
+        </tr>
+        <tr>
+            <td>Kongo</td>
+        </tr>
+        <tr>
+            <td>North Carolina</td>
+        </tr>
+        <tr>
+            <td>Renown</td>
+        </tr>
+        <tr>
+            <td>Revenge</td>
+        </tr>
+        <tr>
+            <td>Tennessee</td>
+        </tr>
+        <tr>
+            <td>Yamato</td>
+        </tr>
+        <tr>
+            <td>Bismarck</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 37 (Serge I: 2003-02-17) [2]
+Найдите классы, в которые входит только один корабль из базы данных (учесть также корабли в Outcomes).
+
+
+
+```sql
+%%sql
+  WITH all_ships AS (
+           SELECT class, name
+             FROM ships
+
+            UNION
+
+           SELECT ship, ship
+             FROM outcomes
+            WHERE outcomes.ship IN (SELECT class
+                                      FROM Classes))
+SELECT class
+  FROM all_ships
+ GROUP BY class
+HAVING COUNT(class) = 1;
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    1 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>class</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Bismarck</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 38 (Serge I: 2003-02-19) [1]
+Найдите страны, имевшие когда-либо классы обычных боевых кораблей ('bb') и имевшие когда-либо классы крейсеров ('bc').
+
+
+```sql
+%%sql
+SELECT country
+  FROM classes
+ WHERE type = 'bc'
+
+INTERSECT
+
+SELECT country
+  FROM classes
+ WHERE type = 'bb';
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    2 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>country</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Japan</td>
+        </tr>
+        <tr>
+            <td>Gt.Britain</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 39 (Serge I: 2003-02-14) [2]
+Найдите корабли, `сохранившиеся для будущих сражений`; т.е. выведенные из строя в одной битве (damaged), они участвовали в другой, произошедшей позже.
+
+
+```sql
+%%sql
+  WITH outcomes_with_battles AS (
+           SELECT *
+             FROM outcomes
+             JOIN battles
+               ON battles.name = outcomes.battle)
+SELECT DISTINCT ship
+  FROM outcomes_with_battles AS o1
+ WHERE EXISTS
+       (SELECT *
+          FROM outcomes_with_battles AS o2
+         WHERE o1.date > o2.date
+           AND o2.result = 'damaged'
+           AND o1.ship = o2.ship);
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    1 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>ship</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>California</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 42 (Serge I: 2002-11-05) [1]
+Найдите названия кораблей, потопленных в сражениях, и название сражения, в котором они были потоплены.
+
+
+```sql
+%%sql
+SELECT ship, battle
+  FROM outcomes
+  JOIN battles
+    ON battles.name = outcomes.battle
+ WHERE result = 'sunk';
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    6 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>ship</th>
+            <th>battle</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Bismarck</td>
+            <td>North Atlantic</td>
+        </tr>
+        <tr>
+            <td>Fuso</td>
+            <td>Surigao Strait</td>
+        </tr>
+        <tr>
+            <td>Hood</td>
+            <td>North Atlantic</td>
+        </tr>
+        <tr>
+            <td>Kirishima</td>
+            <td>Guadalcanal</td>
+        </tr>
+        <tr>
+            <td>Schamhorst</td>
+            <td>North Cape</td>
+        </tr>
+        <tr>
+            <td>Yamashiro</td>
+            <td>Surigao Strait</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 43 (qwrqwr: 2011-10-28) [2]
+Укажите сражения, которые произошли в годы, не совпадающие ни с одним из годов спуска кораблей на воду.
+
+
+```sql
+%%sql
+SELECT name
+  FROM battles
+ WHERE YEAR(date) NOT IN
+       (SELECT launched
+          FROM ships
+         WHERE launched IS NOT NULL);
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    2 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>name</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>#Cuba62a</td>
+        </tr>
+        <tr>
+            <td>#Cuba62b</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 44 (Serge I: 2002-12-04) [1]
+Найдите названия всех кораблей в базе данных, начинающихся с буквы R.
+
+
+```sql
+%%sql
+  WITH all_ships AS (
+           SELECT name
+             FROM ships
+
+            UNION
+
+           SELECT ship
+             FROM outcomes)
+SELECT name
+  FROM all_ships
+ WHERE name LIKE 'R%';
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    8 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>name</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Ramillies</td>
+        </tr>
+        <tr>
+            <td>Renown</td>
+        </tr>
+        <tr>
+            <td>Repulse</td>
+        </tr>
+        <tr>
+            <td>Resolution</td>
+        </tr>
+        <tr>
+            <td>Revenge</td>
+        </tr>
+        <tr>
+            <td>Royal Oak</td>
+        </tr>
+        <tr>
+            <td>Royal Sovereign</td>
+        </tr>
+        <tr>
+            <td>Rodney</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 45 (Serge I: 2002-12-04) [1]
+Найдите названия всех кораблей в базе данных, состоящие из трех и более слов (например, King George V).
+Считать, что слова в названиях разделяются единичными пробелами, и нет концевых пробелов.
+
+
+```sql
+%%sql
+  WITH all_ships AS (
+           SELECT name
+             FROM ships
+
+            UNION
+
+           SELECT ship
+             FROM outcomes)
+SELECT name
+  FROM all_ships
+ WHERE name LIKE '% % %';
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    3 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>name</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>King George V</td>
+        </tr>
+        <tr>
+            <td>Prince of Wales</td>
+        </tr>
+        <tr>
+            <td>Duke of York</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 46 (Serge I: 2003-02-14) [2]
+Для каждого корабля, участвовавшего в сражении при Гвадалканале (Guadalcanal), вывести название, водоизмещение и число орудий.
+
+
+```sql
+%%sql
+SELECT DISTINCT outcomes.ship,
+       classes.displacement,
+       classes.numGuns
+  FROM outcomes
+       LEFT JOIN ships
+       ON outcomes.ship = ships.name
+
+       LEFT JOIN classes
+       ON classes.class = ships.class
+          OR classes.class = outcomes.ship
+ WHERE battle LIKE 'Guadalcanal';
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    4 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>ship</th>
+            <th>displacement</th>
+            <th>numGuns</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>California</td>
+            <td>32000</td>
+            <td>12</td>
+        </tr>
+        <tr>
+            <td>Kirishima</td>
+            <td>32000</td>
+            <td>8</td>
+        </tr>
+        <tr>
+            <td>South Dakota</td>
+            <td>37000</td>
+            <td>12</td>
+        </tr>
+        <tr>
+            <td>Washington</td>
+            <td>37000</td>
+            <td>12</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+
+```python
+
+```
 
 
 ```python
