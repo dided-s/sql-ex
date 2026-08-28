@@ -548,25 +548,368 @@ SELECT SUM(union_table.income - union_table.outcome)
 
 
 
+### Задание: 64 (Serge I: 2010-06-04) [2]
+Используя таблицы Income и Outcome, для каждого пункта приема определить дни, когда был приход, но не было расхода и наоборот.
+Вывод: пункт, дата, тип операции (inc/out), денежная сумма за день.
 
-```python
+
+```sql
+%%sql
+SELECT income.point, income.date, 'inc', SUM(income.inc)
+  FROM income
+       LEFT JOIN outcome
+       ON income.point = outcome.point
+          AND income.date = outcome.date
+ WHERE outcome.code IS NULL
+ GROUP BY income.point, income.date
+
+ UNION
+
+SELECT outcome.point, outcome.date, 'out', SUM(outcome.out)
+  FROM outcome
+       LEFT JOIN income
+       ON outcome.point = income.point
+          AND outcome.date = income.date
+ WHERE income.code IS NULL
+ GROUP BY outcome.point, outcome.date;
 
 ```
 
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    12 rows affected.
 
-```python
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>point</th>
+            <th>date</th>
+            <th>inc</th>
+            <th>SUM(income.inc)</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>1</td>
+            <td>2001-03-22 00:00:00</td>
+            <td>inc</td>
+            <td>30000.00</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>2001-03-23 00:00:00</td>
+            <td>inc</td>
+            <td>15000.00</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>2001-03-24 00:00:00</td>
+            <td>inc</td>
+            <td>3000.00</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>2001-03-14 00:00:00</td>
+            <td>out</td>
+            <td>15348.00</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>2001-03-26 00:00:00</td>
+            <td>out</td>
+            <td>1221.00</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>2001-03-28 00:00:00</td>
+            <td>out</td>
+            <td>2075.00</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>2001-03-29 00:00:00</td>
+            <td>out</td>
+            <td>4010.00</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>2001-04-11 00:00:00</td>
+            <td>out</td>
+            <td>3195.04</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>2001-04-27 00:00:00</td>
+            <td>out</td>
+            <td>3110.00</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>2001-03-29 00:00:00</td>
+            <td>out</td>
+            <td>7848.00</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>2001-04-02 00:00:00</td>
+            <td>out</td>
+            <td>2040.00</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>2001-09-14 00:00:00</td>
+            <td>out</td>
+            <td>1150.00</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 69 (Serge I: 2011-01-06) [2]
+По таблицам Income и Outcome для каждого пункта приема найти остатки денежных средств на конец каждого дня,
+в который выполнялись операции по приходу и/или расходу на данном пункте.
+Учесть при этом, что деньги не изымаются, а остатки/задолженность переходят на следующий день.
+Вывод: пункт приема, день в формате "dd/mm/yyyy", остатки/задолженность на конец этого дня.
+
+
+```sql
+%%sql
+  WITH union_table AS (
+           SELECT point, date, income.inc AS money
+             FROM income
+
+            UNION ALL
+
+           SELECT point, date, -1 * outcome.out
+             FROM outcome)
+SELECT DISTINCT point,
+       #CONVERT(varchar, CONVERT(DATETIME, union_table.date, 103), 103) AS date,
+       DATE_FORMAT(union_table.date, '%d/%m,%Y') AS date,
+       (SELECT SUM(u2.money)
+          FROM union_table AS u2
+         WHERE u2.date <= union_table.date
+           AND u2.point = union_table.point) AS cumulative
+  FROM union_table
+ ORDER BY point;
 
 ```
 
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    17 rows affected.
 
-```python
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>point</th>
+            <th>date</th>
+            <th>cumulative</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>1</td>
+            <td>11/04,2001</td>
+            <td>18987.96</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>11/05,2001</td>
+            <td>23357.96</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>13/04,2001</td>
+            <td>24497.96</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>14/03,2001</td>
+            <td>-15348.00</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>22/03,2001</td>
+            <td>14652.00</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>23/03,2001</td>
+            <td>29652.00</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>24/03,2001</td>
+            <td>29489.00</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>26/03,2001</td>
+            <td>28268.00</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>27/04,2001</td>
+            <td>21387.96</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>28/03,2001</td>
+            <td>26193.00</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>29/03,2001</td>
+            <td>22183.00</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>02/04,2001</td>
+            <td>232.00</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>22/03,2001</td>
+            <td>7120.00</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>24/03,2001</td>
+            <td>10120.00</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>29/03,2001</td>
+            <td>2272.00</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>13/09,2001</td>
+            <td>400.00</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>14/09,2001</td>
+            <td>-750.00</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 81 (Serge I: 2011-11-25) [2]
+Из таблицы Outcome получить все записи за тот месяц (месяцы), с учетом года, в котором суммарное значение расхода (out) было максимальным.
+
+
+```sql
+%%sql
+  WITH month_table AS (
+           SELECT YEAR(date) AS year,
+                  MONTH(date) AS month,
+                  SUM(outcome.out) AS sum
+             FROM outcome
+            GROUP BY YEAR(date), MONTH(date)),
+       max_sum_month_table AS (
+           SELECT year, month, sum
+             FROM month_table
+            WHERE sum = (SELECT MAX(sum)
+                           FROM month_table))
+SELECT outcome.code, outcome.point, outcome.date, outcome.out
+  FROM outcome
+  JOIN max_sum_month_table
+    ON YEAR(outcome.date) = max_sum_month_table.year
+       AND MONTH(outcome.date) = max_sum_month_table.month;
 
 ```
 
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    10 rows affected.
 
-```python
 
-```
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>code</th>
+            <th>point</th>
+            <th>date</th>
+            <th>out</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>1</td>
+            <td>1</td>
+            <td>2001-03-14 00:00:00</td>
+            <td>15348.00</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>1</td>
+            <td>2001-03-24 00:00:00</td>
+            <td>3663.00</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>1</td>
+            <td>2001-03-26 00:00:00</td>
+            <td>1221.00</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td>1</td>
+            <td>2001-03-28 00:00:00</td>
+            <td>2075.00</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td>1</td>
+            <td>2001-03-29 00:00:00</td>
+            <td>2004.00</td>
+        </tr>
+        <tr>
+            <td>10</td>
+            <td>2</td>
+            <td>2001-03-22 00:00:00</td>
+            <td>1440.00</td>
+        </tr>
+        <tr>
+            <td>11</td>
+            <td>2</td>
+            <td>2001-03-29 00:00:00</td>
+            <td>7848.00</td>
+        </tr>
+        <tr>
+            <td>13</td>
+            <td>1</td>
+            <td>2001-03-24 00:00:00</td>
+            <td>3500.00</td>
+        </tr>
+        <tr>
+            <td>14</td>
+            <td>2</td>
+            <td>2001-03-22 00:00:00</td>
+            <td>1440.00</td>
+        </tr>
+        <tr>
+            <td>15</td>
+            <td>1</td>
+            <td>2001-03-29 00:00:00</td>
+            <td>2006.00</td>
+        </tr>
+    </tbody>
+</table>
+
+
 
 
 ```python
