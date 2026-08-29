@@ -1,3 +1,5 @@
+USE sql_ex;
+
 DROP TABLE IF EXISTS Laptop;
 
 DROP TABLE IF EXISTS pc;
