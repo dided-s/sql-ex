@@ -1585,6 +1585,274 @@ SELECT all_makers_types.maker,
 
 
 
+### Задание: 65 (Serge I: 2009-08-24) [2]
+Пронумеровать уникальные пары {maker, type} из Product, упорядочив их следующим образом:
+- имя производителя (maker) по возрастанию;
+- тип продукта (type) в порядке PC, Laptop, Printer.
+Если некий производитель выпускает несколько типов продукции, то выводить его имя только в первой строке;
+остальные строки для ЭТОГО производителя должны содержать пустую строку символов ('').
+
+
+```sql
+%%sql
+  WITH dense_number_table AS (
+           SELECT DISTINCT maker,
+                  type,
+                  DENSE_RANK() OVER (PARTITION BY maker
+                                         ORDER BY CASE
+                                         WHEN type = 'PC' THEN 1
+                                         WHEN type = 'Laptop' THEN 2
+                                         WHEN type = 'Printer' THEN 3
+                                         END) AS dense_num
+             FROM product)
+SELECT ROW_NUMBER() OVER (ORDER BY maker, dense_num) AS num,
+       CASE
+       WHEN dense_num = 1 THEN maker
+       ELSE ''
+       END AS maker,
+       type
+  FROM dense_number_table;
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    9 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>num</th>
+            <th>maker</th>
+            <th>type</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>1</td>
+            <td>A</td>
+            <td>PC</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td></td>
+            <td>Laptop</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td></td>
+            <td>Printer</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td>B</td>
+            <td>PC</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td></td>
+            <td>Laptop</td>
+        </tr>
+        <tr>
+            <td>6</td>
+            <td>C</td>
+            <td>Laptop</td>
+        </tr>
+        <tr>
+            <td>7</td>
+            <td>D</td>
+            <td>Printer</td>
+        </tr>
+        <tr>
+            <td>8</td>
+            <td>E</td>
+            <td>PC</td>
+        </tr>
+        <tr>
+            <td>9</td>
+            <td></td>
+            <td>Printer</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 71 (Serge I: 2008-02-23) [1]
+Найти тех производителей ПК, все модели ПК которых имеются в таблице PC.
+
+
+```sql
+%%sql
+SELECT product.maker
+  FROM product
+       LEFT JOIN pc
+       ON product.model = pc.model
+ WHERE product.type = 'pc'
+ GROUP BY maker
+HAVING COUNT(product.model) = COUNT(pc.model);
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    2 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>maker</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>B</td>
+        </tr>
+        <tr>
+            <td>A</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 75 (Serge I: 2020-01-31) [2]
+Для тех производителей, у которых есть продукты с известной ценой хотя бы в одной из таблиц Laptop, PC, Printer найти максимальные цены на каждый из типов продукции.
+Вывод: maker, максимальная цена на ноутбуки, максимальная цена на ПК, максимальная цена на принтеры.
+Для отсутствующих продуктов/цен использовать NULL.
+
+
+```sql
+%%sql
+SELECT maker,
+       MAX(laptop.price) AS laptop,
+       MAX(pc.price) AS pc,
+       MAX(printer.price) AS printer
+  FROM product
+       LEFT JOIN laptop
+       ON product.type = 'laptop'
+          AND product.model = laptop.model
+
+       LEFT JOIN pc
+       ON product.type = 'pc'
+          AND product.model = pc.model
+
+       LEFT JOIN printer
+       ON product.type = 'printer'
+          AND product.model = printer.model
+ GROUP BY maker
+HAVING MAX(laptop.price) IS NOT NULL
+    OR MAX(pc.price) IS NOT NULL
+    OR MAX(printer.price) IS NOT NULL
+ ORDER BY maker;
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    5 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>maker</th>
+            <th>laptop</th>
+            <th>pc</th>
+            <th>printer</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>A</td>
+            <td>1150.00</td>
+            <td>980.00</td>
+            <td>400.00</td>
+        </tr>
+        <tr>
+            <td>B</td>
+            <td>1200.00</td>
+            <td>850.00</td>
+            <td>None</td>
+        </tr>
+        <tr>
+            <td>C</td>
+            <td>970.00</td>
+            <td>None</td>
+            <td>None</td>
+        </tr>
+        <tr>
+            <td>D</td>
+            <td>None</td>
+            <td>None</td>
+            <td>400.00</td>
+        </tr>
+        <tr>
+            <td>E</td>
+            <td>None</td>
+            <td>350.00</td>
+            <td>290.00</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 80 (Baser: 2011-11-11) [1]
+Найти производителей любой компьютерной техники, у которых нет моделей ПК, не представленных в таблице PC.
+
+
+```sql
+%%sql
+SELECT maker
+  FROM product
+
+EXCEPT
+
+SELECT maker
+  FROM product
+ WHERE type = 'pc'
+   AND model NOT IN (SELECT model FROM pc);
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    4 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>maker</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>B</td>
+        </tr>
+        <tr>
+            <td>A</td>
+        </tr>
+        <tr>
+            <td>D</td>
+        </tr>
+        <tr>
+            <td>C</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
 ### Задание: 97 (qwrqwr: 2013-02-15) [2]
 Отобрать из таблицы Laptop те строки, для которых выполняется следующее условие:
 значения из столбцов speed, ram, price, screen возможно расположить таким образом, что каждое последующее значение будет превосходить предыдущее в 2 раза или более.

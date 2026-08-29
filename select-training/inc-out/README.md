@@ -688,7 +688,7 @@ SELECT outcome.point, outcome.date, 'out', SUM(outcome.out)
              FROM outcome)
 SELECT DISTINCT point,
        #CONVERT(varchar, CONVERT(DATETIME, union_table.date, 103), 103) AS date,
-       DATE_FORMAT(union_table.date, '%d/%m,%Y') AS date,
+       DATE_FORMAT(union_table.date, '%d/%m/%Y') AS date,
        (SELECT SUM(u2.money)
           FROM union_table AS u2
          WHERE u2.date <= union_table.date
