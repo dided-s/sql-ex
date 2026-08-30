@@ -1,4 +1,4 @@
-USE dml_computer;
+USE sql_ex_dml;
 
 DROP TABLE IF EXISTS Printer;
 

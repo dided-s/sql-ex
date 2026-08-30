@@ -5,3 +5,8 @@
 1. [Компьютерная фирма](./select-training/computer-firm/README.md)
 2. [Фирма вторсырья](./select-training/inc-out/README.md)
 3. [Корабли](./select-training/ships/README.md)
+
+### [DML](https://www.sql-ex.ru/dmlexercises.php)
+1. [Компьютерная фирма](./DML/computer-firm/README.md)
+2. [Фирма вторсырья](./DML/inc-out/README.md)
+3. [Корабли](./DML/ships/README.md)

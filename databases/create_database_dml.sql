@@ -1,5 +1,5 @@
-DROP DATABASE IF EXISTS dml_computer;
+DROP DATABASE IF EXISTS sql_ex_dml;
 
-CREATE DATABASE dml_computer;
+CREATE DATABASE sql_ex_dml;
 
-USE dml_computer;
+USE sql_ex_dml;
