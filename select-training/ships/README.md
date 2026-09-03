@@ -757,6 +757,666 @@ SELECT DISTINCT outcomes.ship,
 
 
 
+### Задание: 47 (Serge I: 2019-06-07) [2]
+Определить страны, которые потеряли в сражениях все свои корабли.
+
+
+```sql
+%%sql
+  WITH all_ships AS (
+           SELECT country, name
+             FROM classes
+             JOIN ships
+               ON classes.class = ships.class
+
+            UNION
+
+           SELECT country, ship
+             FROM outcomes
+             JOIN classes
+               ON classes.class = outcomes.ship),
+/* number of sunked ships */
+       sunked_ships AS (
+           SELECT country, COUNT(*) AS total
+             FROM all_ships
+                  LEFT JOIN outcomes
+                  ON all_ships.name = outcomes.ship
+            WHERE result = 'sunk'
+            GROUP BY country),
+/* total number of ships */
+       ships_count_table AS (
+           SELECT country, COUNT(*) AS total
+             FROM all_ships
+            GROUP BY country)
+SELECT ships_count_table.country
+  FROM ships_count_table
+  JOIN sunked_ships
+    ON ships_count_table.country = sunked_ships.country
+ WHERE ships_count_table.total = sunked_ships.total;
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    1 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>country</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Germany</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 48 (Serge I: 2003-02-16) [1]
+Найдите классы кораблей, в которых хотя бы один корабль был потоплен в сражении.
+
+
+```sql
+%%sql
+  WITH all_ships AS (
+           SELECT classes.class, name
+             FROM classes
+             JOIN ships
+               ON classes.class = ships.class
+
+            UNION
+
+           SELECT class, ship
+             FROM outcomes
+             JOIN classes
+               ON classes.class = outcomes.ship)
+SELECT DISTINCT class
+  FROM all_ships
+  JOIN outcomes
+    ON all_ships.name = outcomes.ship
+ WHERE result = 'sunk';
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    2 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>class</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Bismarck</td>
+        </tr>
+        <tr>
+            <td>Kongo</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 49 (Serge I: 2003-02-17) [1]
+Найдите названия кораблей с орудиями калибра 16 дюймов (учесть корабли из таблицы Outcomes).
+
+
+```sql
+%%sql
+  WITH all_ships AS (
+           SELECT classes.class, name
+             FROM ships
+             JOIN classes
+               ON classes.class = ships.class
+
+            UNION
+
+           SELECT class, ship
+             FROM outcomes
+             JOIN classes
+               ON classes.class = outcomes.ship)
+SELECT all_ships.name
+  FROM all_ships
+       LEFT JOIN classes
+       ON all_ships.class = classes.class
+ WHERE bore = 16;
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    7 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>name</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Iowa</td>
+        </tr>
+        <tr>
+            <td>Missouri</td>
+        </tr>
+        <tr>
+            <td>New Jersey</td>
+        </tr>
+        <tr>
+            <td>Wisconsin</td>
+        </tr>
+        <tr>
+            <td>North Carolina</td>
+        </tr>
+        <tr>
+            <td>South Dakota</td>
+        </tr>
+        <tr>
+            <td>Washington</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 50 (Serge I: 2002-11-05) [1]
+Найдите сражения, в которых участвовали корабли класса Kongo из таблицы Ships.
+
+
+```sql
+%%sql
+SELECT DISTINCT battle
+  FROM ships
+  JOIN outcomes
+    ON ships.name = outcomes.ship
+ WHERE ships.class = 'Kongo';
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    1 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>battle</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Guadalcanal</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 51 (Serge I: 2003-02-17) [2]
+Найдите названия кораблей, имеющих наибольшее число орудий среди всех имеющихся кораблей такого же водоизмещения (учесть корабли из таблицы Outcomes).
+
+
+```sql
+%%sql
+  WITH all_ships AS (
+           SELECT classes.class, name, classes.displacement, classes.numGuns
+             FROM ships
+             JOIN classes
+               ON classes.class = ships.class
+
+            UNION
+
+           SELECT class, ship, classes.displacement, classes.numGuns
+             FROM outcomes
+             JOIN classes
+               ON classes.class = outcomes.ship),
+       max_numGuns_table AS (
+           SELECT classes.displacement AS displacement,
+                  MAX(classes.numGuns) AS max_numGuns
+             FROM all_ships
+             JOIN classes
+               ON all_ships.class = classes.class
+            GROUP BY classes.displacement)
+SELECT DISTINCT all_ships.name
+  FROM all_ships
+  JOIN max_numGuns_table
+    ON all_ships.displacement = max_numGuns_table.displacement
+       AND all_ships.numGuns = max_numGuns_table.max_numGuns;
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    16 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>name</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Iowa</td>
+        </tr>
+        <tr>
+            <td>Missouri</td>
+        </tr>
+        <tr>
+            <td>New Jersey</td>
+        </tr>
+        <tr>
+            <td>Wisconsin</td>
+        </tr>
+        <tr>
+            <td>North Carolina</td>
+        </tr>
+        <tr>
+            <td>South Dakota</td>
+        </tr>
+        <tr>
+            <td>Washington</td>
+        </tr>
+        <tr>
+            <td>Ramillies</td>
+        </tr>
+        <tr>
+            <td>Revenge</td>
+        </tr>
+        <tr>
+            <td>Royal Oak</td>
+        </tr>
+        <tr>
+            <td>Royal Sovereign</td>
+        </tr>
+        <tr>
+            <td>California</td>
+        </tr>
+        <tr>
+            <td>Tennessee</td>
+        </tr>
+        <tr>
+            <td>Musashi</td>
+        </tr>
+        <tr>
+            <td>Yamato</td>
+        </tr>
+        <tr>
+            <td>Bismarck</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 52 (qwrqwr: 2010-04-23) [2]
+Определить названия всех кораблей из таблицы Ships, которые могут быть линейным японским кораблем,
+имеющим число главных орудий не менее девяти, калибр орудий менее 19 дюймов и водоизмещение не более 65 тыс.тонн
+
+
+```sql
+%%sql
+SELECT ships.name
+  FROM ships
+  JOIN classes
+    ON classes.class = ships.class
+ WHERE country = 'Japan'
+   AND type = 'bb'
+   AND (numguns >= 9
+        OR numguns IS NULL)
+   AND (bore < 19
+        OR bore IS NULL)
+   AND (displacement <= 65000
+        OR displacement IS NULL);
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    2 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>name</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Musashi</td>
+        </tr>
+        <tr>
+            <td>Yamato</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 53 (Serge I: 2002-11-05) [2]
+Определите среднее число орудий для классов линейных кораблей.
+Получить результат с точностью до 2-х десятичных знаков.
+
+
+
+```sql
+%%sql
+SELECT CAST(AVG(numGuns * 1.0) AS DECIMAL(10, 2)) AS avg_numguns
+  FROM classes
+ WHERE type = 'bb';
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    1 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>avg_numguns</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>9.67</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 54 (Serge I: 2003-02-14) [2]
+С точностью до 2-х десятичных знаков определите среднее число орудий всех линейных кораблей (учесть корабли из таблицы Outcomes).
+
+
+```sql
+%%sql
+  WITH all_ships AS (
+           SELECT classes.class, name, classes.type, classes.numGuns
+             FROM ships
+             JOIN classes
+               ON classes.class = ships.class
+
+            UNION
+
+           SELECT class, ship, classes.type, classes.numGuns
+             FROM outcomes
+             JOIN classes
+               ON classes.class = outcomes.ship)
+SELECT CAST(AVG(numGuns * 1.0) AS DECIMAL(10, 2)) AS avg_numguns
+  FROM all_ships
+ WHERE type = 'bb';
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    1 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>avg_numguns</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>9.63</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 55 (Serge I: 2003-02-16) [1]
+Для каждого класса определите год, когда был спущен на воду первый корабль этого класса. Если год спуска на воду головного корабля неизвестен, определите минимальный год спуска на воду кораблей этого класса. Вывести: класс, год.
+
+
+```sql
+%%sql
+SELECT classes.class, MIN(launched)
+  FROM classes
+       LEFT JOIN ships
+       ON ships.class = classes.class
+ GROUP BY classes.class;
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    8 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>class</th>
+            <th>MIN(launched)</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Bismarck</td>
+            <td>None</td>
+        </tr>
+        <tr>
+            <td>Iowa</td>
+            <td>1943</td>
+        </tr>
+        <tr>
+            <td>Kongo</td>
+            <td>1913</td>
+        </tr>
+        <tr>
+            <td>North Carolina</td>
+            <td>1941</td>
+        </tr>
+        <tr>
+            <td>Renown</td>
+            <td>1916</td>
+        </tr>
+        <tr>
+            <td>Revenge</td>
+            <td>1916</td>
+        </tr>
+        <tr>
+            <td>Tennessee</td>
+            <td>1920</td>
+        </tr>
+        <tr>
+            <td>Yamato</td>
+            <td>1941</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 56 (Serge I: 2003-02-16) [2]
+Для каждого класса определите число кораблей этого класса, потопленных в сражениях. Вывести: класс и число потопленных кораблей.
+
+
+```sql
+%%sql
+  WITH all_ships AS (
+           SELECT classes.class, name
+             FROM classes
+                  LEFT JOIN ships
+                  ON classes.class = ships.class
+
+            UNION
+
+           SELECT class, ship
+             FROM classes
+                  LEFT JOIN outcomes
+                  ON classes.class = outcomes.ship)
+SELECT all_ships.class,
+       SUM(CASE WHEN result = 'sunk' THEN 1 ELSE 0 END) AS sunk_count
+  FROM all_ships
+       LEFT JOIN outcomes
+       ON all_ships.name = outcomes.ship
+ GROUP BY all_ships.class;
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    8 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>class</th>
+            <th>sunk_count</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Bismarck</td>
+            <td>1</td>
+        </tr>
+        <tr>
+            <td>Iowa</td>
+            <td>0</td>
+        </tr>
+        <tr>
+            <td>Kongo</td>
+            <td>1</td>
+        </tr>
+        <tr>
+            <td>North Carolina</td>
+            <td>0</td>
+        </tr>
+        <tr>
+            <td>Renown</td>
+            <td>0</td>
+        </tr>
+        <tr>
+            <td>Revenge</td>
+            <td>0</td>
+        </tr>
+        <tr>
+            <td>Tennessee</td>
+            <td>0</td>
+        </tr>
+        <tr>
+            <td>Yamato</td>
+            <td>0</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+### Задание: 57 (Serge I: 2003-02-14) [2]
+Для классов, имеющих потери в виде потопленных кораблей и не менее 3 кораблей в базе данных, вывести имя класса и число потопленных кораблей.
+
+
+```sql
+%%sql
+  WITH all_classes AS (
+           SELECT classes.class, name AS ship_name
+             FROM classes
+                  LEFT JOIN ships
+                  ON classes.class = ships.class
+
+            UNION
+
+           SELECT class, ship AS ship_name
+             FROM classes
+             JOIN outcomes
+               ON classes.class = outcomes.ship),
+       all_ships AS (
+           SELECT classes.class, name
+             FROM ships
+                  LEFT JOIN classes
+                  ON classes.class = ships.class
+
+            UNION
+
+           SELECT class, ship
+             FROM outcomes
+             JOIN classes
+               ON classes.class = outcomes.ship)
+SELECT all_classes.class,
+       SUM(CASE WHEN result = 'sunk' THEN 1 ELSE 0 END) AS sunk_count
+  FROM all_classes
+       LEFT JOIN outcomes
+       ON all_classes.ship_name = outcomes.ship
+ GROUP BY all_classes.class
+HAVING SUM(CASE WHEN result = 'sunk' THEN 1 ELSE 0 END) > 0
+   AND (SELECT COUNT(all_ships.name)
+          FROM all_ships
+         WHERE all_classes.class = all_ships.class
+         GROUP BY all_ships.class) >= 3;
+
+```
+
+     * mysql+mysqlconnector://root:***@localhost/sql_ex
+    1 rows affected.
+
+
+
+
+
+<table>
+    <thead>
+        <tr>
+            <th>class</th>
+            <th>sunk_count</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Kongo</td>
+            <td>1</td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+
+```python
+
+```
+
 
 ```python
 
