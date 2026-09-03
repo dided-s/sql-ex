@@ -196,6 +196,30 @@ UPDATE Product
 
 
 
+### Задание: -9 (: ) [1]
+Секретная база маскирует боевые процессоры пришельцев в таблице PC. Из портала прибыла новая партия техники, временно оформленная как ноутбуки в таблице Laptop. Синхронизируйте таблицу PC с таблицей Laptop по полю code, используя оператор MERGE.
+Правила синхронизации:
+1. Если компьютер с таким code есть в обеих таблицах, обновите в PC объём памяти (ram) и размер диска (hd) данными из Laptop.
+2. Если компьютер есть в Laptop, но отсутствует в PC, добавьте его в PC. При этом в поле cd запишите строку 'Quantum', а остальные значения (code, model, speed, ram, hd, price) возьмите из таблицы Laptop.
+3. Если компьютер есть в PC, но отсутствует в Laptop, удалите его из таблицы PC.
+
+
+```sql
+%%sql
+ MERGE INTO pc
+ USING laptop
+    ON pc.code = laptop.code
+  WHEN MATCHED THEN
+       UPDATE
+          SET pc.ram = laptop.ram,
+              pc.hd = laptop.hd
+  WHEN NOT MATCHED BY TARGET THEN
+       INSERT (code, model, speed, ram, hd, cd, price)
+       VALUES (laptop.code, laptop.model, laptop.speed, laptop.ram, laptop.hd, 'Quantum', laptop.price)
+  WHEN NOT MATCHED BY SOURCE THEN
+       DELETE;
+```
+
 ### Задание: 1 (Serge I: 2004-09-08) [1]
 Добавить в таблицу PC следующую модель:
 code: 20<br>
@@ -430,8 +454,30 @@ SELECT model + (SELECT MAX(code) FROM pc) AS code,
 
 
 
+### Задание: 11 (Serge I: 2004-09-09)
+Для каждой группы блокнотов с одинаковым номером модели добавить запись в таблицу PC со следующими характеристиками:<br>
+код: минимальный код блокнота в группе +20;<br>
+модель: номер модели блокнота +1000;<br>
+скорость: максимальная скорость блокнота в группе;<br>
+ram: максимальный объем ram блокнота в группе *2;<br>
+hd: максимальный объем hd блокнота в группе *2;<br>
+cd: cd c максимальной скоростью среди всех ПК;<br>
+цена: максимальная цена блокнота в группе, уменьшенная в 1,5 раза
 
-```python
+
+```sql
+%%sql
+INSERT INTO pc (code, model, speed, ram, hd, cd, price)
+SELECT MIN(code) + 20,
+       model + 1000,
+       MAX(speed),
+       MAX(ram) * 2,
+       MAX(hd) * 2,
+       (SELECT CONCAT(MAX(CAST(REPLACE(cd, 'x', '') AS INT)), 'x')
+          FROM pc) AS cd,
+       MAX(price) / 1.5
+  FROM laptop
+ GROUP BY model;
 
 ```
 
